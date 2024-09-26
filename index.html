@@ -171,10 +171,12 @@ function drawGrid() {
 
 // Fonction pour redessiner le canvas avec ou sans la grille
 function redrawCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Clear the canvas only when you need to draw a new image, not when toggling the grid
   if (imageLoaded) {
     ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Recharge l'image
   }
+  
+  // Dessine la grille si activée
   if (showGrid) {
     drawGrid(); // Dessine la grille si activée
   }
