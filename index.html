@@ -101,53 +101,52 @@
 
   <script>
     const canvas = document.getElementById('drawingCanvas');
-    const ctx = canvas.getContext('2d');
-    const pixelSize = 20;  // pixel size
-    const gridWidth = 32;  // Updated for width = 32
-    const gridHeight = 20;
-    let drawing = false;
-    let currentColor = '#000000'; // default color
-    let savedPixels = [];
-    let imageLoaded = false;
+const ctx = canvas.getContext('2d');
+const pixelSize = 20;  // pixel size
+const gridWidth = 32;  // Updated for width = 32
+const gridHeight = 20;
+let drawing = false;
+let currentColor = '#000000'; // default color
+let savedPixels = [];
+let imageLoaded = false;
 
-    // List of predefined colors
-    const colors = ['#101010', '#d09d60', '#5e7152', '#e9d8de', '#Fe0500', '#ffda1f', '#c902c9', '#c74f15', '#1a43c9', '#000000', '#a56e2c', '#7ea26a', '#c8b3b2', '#fd8cbd', '#fffefc', '#27b140', '#555555', '#81dad9'];
+// List of predefined colors
+const colors = ['#101010', '#d09d60', '#5e7152', '#e9d8de', '#Fe0500', '#ffda1f', '#c902c9', '#c74f15', '#1a43c9', '#000000', '#a56e2c', '#7ea26a', '#c8b3b2', '#fd8cbd', '#fffefc', '#27b140', '#555555', '#81dad9'];
 
-    // create color palette
-    const palette = document.getElementById('palette');
-    colors.forEach(color => {
-      const swatch = document.createElement('div');
-      swatch.classList.add('color-swatch');
-      swatch.style.backgroundColor = color;
-      swatch.addEventListener('click', () => selectColor(color, swatch));
-      palette.appendChild(swatch);
-    });
+// create color palette
+const palette = document.getElementById('palette');
+colors.forEach(color => {
+  const swatch = document.createElement('div');
+  swatch.classList.add('color-swatch');
+  swatch.style.backgroundColor = color;
+  swatch.addEventListener('click', () => selectColor(color, swatch));
+  palette.appendChild(swatch);
+});
 
-    // Select color
-    function selectColor(color, swatch) {
-      currentColor = color;
-      
-      // Remove the “active” class from all colors
-      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-      
-      // Add the “active” class to the selected color
-      if (swatch) {
-        swatch.classList.add('active');
-      }
-    }
+// Select color
+function selectColor(color, swatch) {
+  currentColor = color;
+  
+  // Remove the “active” class from all colors
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  
+  // Add the “active” class to the selected color
+  if (swatch) {
+    swatch.classList.add('active');
+  }
+}
 
+// load image on canvas
+const baseImage = new Image();
+baseImage.src = '/images/tdp1.png';  
+baseImage.onload = () => {
+  ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+  imageLoaded = true;
+};
 
-    // load image on canvas
-    const baseImage = new Image();
-    baseImage.src = '/images/tdp1.png';  
-    baseImage.onload = () => {
-      ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-      imageLoaded = true;
-    };
+document.querySelector('.color-swatch').classList.add('active');
 
-    document.querySelector('.color-swatch').classList.add('active');
-
-    let showGrid = false; // État initial pour afficher la grille
+let showGrid = false; // État initial pour afficher la grille
 
 // Fonction pour dessiner la grille
 function drawGrid() {
@@ -169,14 +168,21 @@ function drawGrid() {
   }
 }
 
+// Fonction pour redessiner les pixels
+function redrawPixels() {
+  savedPixels.forEach(pixel => {
+    ctx.fillStyle = pixel.color;
+    ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+  });
+}
+
 // Fonction pour redessiner le canvas avec ou sans la grille
 function redrawCanvas() {
-  // Clear the canvas only when you need to draw a new image, not when toggling the grid
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas pour un redraw propre
   if (imageLoaded) {
     ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Recharge l'image
   }
-  
-  // Dessine la grille si activée
+  redrawPixels(); // Redessine les pixels
   if (showGrid) {
     drawGrid(); // Dessine la grille si activée
   }
@@ -188,52 +194,51 @@ document.getElementById('toggleGrid').addEventListener('click', () => {
   redrawCanvas(); // Redessine le canvas
 });
 
-    
-    // draw a pixel function
-    function drawPixel(x, y, color) {
-      const pixelX = Math.floor(x / pixelSize) * pixelSize;
-      const pixelY = Math.floor(y / pixelSize) * pixelSize;
-      ctx.fillStyle = color;
-      ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+// draw a pixel function
+function drawPixel(x, y, color) {
+  const pixelX = Math.floor(x / pixelSize) * pixelSize;
+  const pixelY = Math.floor(y / pixelSize) * pixelSize;
+  ctx.fillStyle = color;
+  ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
 
-      // save the pixel
-      savedPixels.push({ x: pixelX, y: pixelY, color: color });
-    }
+  // save the pixel
+  savedPixels.push({ x: pixelX, y: pixelY, color: color });
+}
 
-    // begin drawing
-    canvas.addEventListener('mousedown', (e) => {
-      drawing = true;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      drawPixel(x, y, currentColor);
-    });
+// begin drawing
+canvas.addEventListener('mousedown', (e) => {
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  drawPixel(x, y, currentColor);
+});
 
-    // draw by moving mouse
-    canvas.addEventListener('mousemove', (e) => {
-      if (drawing) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        drawPixel(x, y, currentColor);
-      }
-    });
+// draw by moving mouse
+canvas.addEventListener('mousemove', (e) => {
+  if (drawing) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    drawPixel(x, y, currentColor);
+  }
+});
 
-    // Stop drawing
-    canvas.addEventListener('mouseup', () => {
-      drawing = false;
-    });
+// Stop drawing
+canvas.addEventListener('mouseup', () => {
+  drawing = false;
+});
 
-    // Clear Canvas
-    document.getElementById('clearCanvas').addEventListener('click', () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (imageLoaded) {
-        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Load Image
-      }
-      savedPixels = [];
-    });
+// Clear Canvas
+document.getElementById('clearCanvas').addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (imageLoaded) {
+    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Load Image
+  }
+  savedPixels = [];
+});
 
-    // Save image
+// Save image
 document.getElementById('saveImage').addEventListener('click', () => {
   
   const tempCanvas = document.createElement('canvas');
@@ -241,22 +246,18 @@ document.getElementById('saveImage').addEventListener('click', () => {
   tempCanvas.height = 800;
   const tempCtx = tempCanvas.getContext('2d');
 
-  
   tempCtx.drawImage(baseImage, 0, 0, 1280, 800);
 
-  
   savedPixels.forEach(pixel => {
     tempCtx.fillStyle = pixel.color;
     tempCtx.fillRect(pixel.x * (1280 / 640), pixel.y * (800 / 400), (20 * (1280 / 640)), (20 * (800 / 400)));
   });
 
-  
   const link = document.createElement('a');
   link.download = 'dessin.png';
   link.href = tempCanvas.toDataURL();
   link.click();
 });
-
 
   </script>
 </body>
