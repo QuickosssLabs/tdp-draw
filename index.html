@@ -49,11 +49,11 @@
       background-color: #555;
     }
     .palette {
-    display: flex; 
-    flex-wrap: wrap; 
-    justify-content: center; 
+    display: flex; /* Utilise flexbox */
+    flex-wrap: wrap; /* Permet aux éléments de passer à la ligne */
+    justify-content: center; /* Centre les éléments horizontalement */
     margin-top: 20px;
-    max-width: 400px; 
+    max-width: 400px; /* Limite la largeur totale (10 carrés de 30px + marges) */
     }
 
   .color-swatch {
@@ -63,7 +63,7 @@
     border: 2px solid transparent;
     transition: border 0.3s;
     border-radius: 5px;
-    margin: 5px; 
+    margin: 5px; /* Espace autour de chaque carré */
   }
 
     .color-swatch.active {
@@ -81,11 +81,34 @@
       color: #333;
     }
 
+    footer {
+    background-color: #333;
+    padding: 10px;
+    position: relative;
+    width: 100%;
+    bottom: 0;
+    margin-top: 40px;
+}
+
+footer p {
+    margin: 10px 0;
+    color: rgb(252, 252, 252);
+}
+
+footer a {
+    color: #FFD700;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
   </style>
 </head>
 <body>
   <h1>Hello my name is TDP</h1>
-  <p>Draw your TDP/RAWR Tag and share it on X.com.</p>
+  <p>Draw your TDP/RAWR Tag and share it on.</p>
 
   <canvas id="drawingCanvas" width="640" height="400"></canvas>
 
@@ -98,6 +121,11 @@
     <button id="clearCanvas">Clear</button>
     <button id="saveImage">Download</button>
   </div>
+
+  <footer>
+    <p>Drawing tool created for Tiny DinoPunks by <a href="https://twitter.com/0x_Quickosss" target="_blank">Quickosss</a></p>
+    <p><a href="https://opensea.io/collection/tiny-dinopunks" target="_blank">See The Tiny DinoPunks collection on Opensea</a></p>
+</footer>
 
   <script>
     const canvas = document.getElementById('drawingCanvas');
@@ -168,7 +196,7 @@ function drawGrid() {
   }
 }
 
-// redraw pixels
+// Fonction pour redessiner les pixels
 function redrawPixels() {
   savedPixels.forEach(pixel => {
     ctx.fillStyle = pixel.color;
@@ -176,7 +204,7 @@ function redrawPixels() {
   });
 }
 
-// redraw canvas with or without grid
+// Fonction pour redessiner le canvas avec ou sans la grille
 function redrawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas pour un redraw propre
   if (imageLoaded) {
@@ -188,7 +216,7 @@ function redrawCanvas() {
   }
 }
 
-// event for grid button
+// Événement pour le bouton de la grille
 document.getElementById('toggleGrid').addEventListener('click', () => {
   showGrid = !showGrid; // Inverse l'état de la grille
   redrawCanvas(); // Redessine le canvas
@@ -254,7 +282,7 @@ document.getElementById('saveImage').addEventListener('click', () => {
   });
 
   const link = document.createElement('a');
-  link.download = 'tdp.png';
+  link.download = 'dessin.png';
   link.href = tempCanvas.toDataURL();
   link.click();
 });
