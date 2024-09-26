@@ -49,11 +49,11 @@
       background-color: #555;
     }
     .palette {
-    display: flex; /* Utilise flexbox */
-    flex-wrap: wrap; /* Permet aux éléments de passer à la ligne */
-    justify-content: center; /* Centre les éléments horizontalement */
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
     margin-top: 20px;
-    max-width: 400px; /* Limite la largeur totale (10 carrés de 30px + marges) */
+    max-width: 400px; 
     }
 
   .color-swatch {
@@ -63,7 +63,7 @@
     border: 2px solid transparent;
     transition: border 0.3s;
     border-radius: 5px;
-    margin: 5px; /* Espace autour de chaque carré */
+    margin: 5px; 
   }
 
     .color-swatch.active {
@@ -168,7 +168,7 @@ function drawGrid() {
   }
 }
 
-// Fonction pour redessiner les pixels
+// redraw pixels
 function redrawPixels() {
   savedPixels.forEach(pixel => {
     ctx.fillStyle = pixel.color;
@@ -176,7 +176,7 @@ function redrawPixels() {
   });
 }
 
-// Fonction pour redessiner le canvas avec ou sans la grille
+// redraw canvas with or without grid
 function redrawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas pour un redraw propre
   if (imageLoaded) {
@@ -188,7 +188,7 @@ function redrawCanvas() {
   }
 }
 
-// Événement pour le bouton de la grille
+// event for grid button
 document.getElementById('toggleGrid').addEventListener('click', () => {
   showGrid = !showGrid; // Inverse l'état de la grille
   redrawCanvas(); // Redessine le canvas
