@@ -48,62 +48,58 @@
     .controls button:hover {
       background-color: #555;
     }
-    .palette {
-    display: flex; /* Utilise flexbox */
-    flex-wrap: wrap; /* Permet aux éléments de passer à la ligne */
-    justify-content: center; /* Centre les éléments horizontalement */
-    margin-top: 20px;
-    max-width: 600px; /* Limite la largeur totale (10 carrés de 30px + marges) */
+    .icons {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
     }
-
-  .color-swatch {
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border 0.3s;
-    border-radius: 5px;
-    margin: 5px; /* Espace autour de chaque carré */
-  }
-
+    .icon {
+      cursor: pointer;
+    }
+    .icon img {
+      width: 30px;
+      height: 30px;
+    }
+    .palette {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 5px;
+      max-width: 600px;
+    }
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border 0.3s;
+      border-radius: 5px;
+      margin: 5px;
+    }
     .color-swatch.active {
       border: 2px solid black;
     }
-    .color-picker {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .color-picker label {
-      margin-right: 10px;
-      font-size: 16px;
-      color: #333;
-    }
-
     footer {
-    background-color: #333;
-    padding: 10px;
-    position: relative;
-    width: 100%;
-    bottom: 0;
-    margin-top: 40px;
-}
-
-footer p {
-    margin: 10px 0;
-    color: rgb(252, 252, 252);
-}
-
-footer a {
-    color: #FFD700;
-    text-decoration: none;
-}
-
-footer a:hover {
-    text-decoration: underline;
-}
-
+      background-color: #333;
+      padding: 10px;
+      position: relative;
+      width: 100%;
+      bottom: 0;
+      margin-top: 40px;
+      text-align: center;
+    }
+    footer p {
+      margin: 10px 0;
+      color: rgb(252, 252, 252);
+    }
+    footer a {
+      color: #FFD700;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -112,9 +108,18 @@ footer a:hover {
 
   <canvas id="drawingCanvas" width="640" height="400"></canvas>
 
+  <!-- Icons for tools (Eraser and Eyedropper) -->
+  <div class="icons">
+    <div class="icon" id="eraserTool" title="Eraser">
+      <img src="/images/eraser.png" alt="Eraser">
+    </div>
+    <div class="icon" id="eyedropperTool" title="Eyedropper">
+      <img src="/images/eyedropper.png" alt="Eyedropper">
+    </div>
+  </div>
+
   <!-- Predefined color palette -->
   <div class="palette" id="palette"></div>
-
 
   <div class="controls">
     <button id="toggleGrid">Toggle Grid</button>
@@ -125,170 +130,220 @@ footer a:hover {
   <footer>
     <p>Drawing tool created for Tiny DinoPunks by <a href="https://twitter.com/0x_Quickosss" target="_blank">Quickosss</a></p>
     <p><a href="https://opensea.io/collection/tiny-dinopunks" target="_blank">See The Tiny DinoPunks collection on Opensea</a></p>
-</footer>
+  </footer>
 
   <script>
     const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const pixelSize = 20;  // pixel size
-const gridWidth = 32;  // Updated for width = 32
-const gridHeight = 20;
-let drawing = false;
-let currentColor = '#000000'; // default color
-let savedPixels = [];
-let imageLoaded = false;
+    const ctx = canvas.getContext('2d');
+    const pixelSize = 20;  // pixel size
+    const gridWidth = 32;
+    const gridHeight = 20;
+    let drawing = false;
+    let currentColor = '#000000'; // default color
+    let savedPixels = [];
+    let imageLoaded = false;
+    let isErasing = false;
+    let isEyedropperActive = false;
 
-// List of predefined colors
-const colors = ['#9be0e0', '#75bdbd', '#328dfd', '#1a6ed5', '#5e7253','#7da269','#2c9541', '#711010', '#e22626',
-                '#fe8dbe', '#ad2160', '#562600', '#86581e', '#723709', '#a77c47', '#ae8b61',
-                '#ca4e11', '#ffd926', '#000000', '#ffffff', '#dfdfdf', '#b8afab', '#a58d8d',
-                '#555555', '#710cc7', '#b261dc'];
+    // List of predefined colors
+    const colors = ['#9be0e0', '#75bdbd', '#328dfd', '#1a6ed5', '#5e7253','#7da269','#2c9541', '#711010', '#e22626',
+                    '#fe8dbe', '#ad2160', '#562600', '#86581e', '#723709', '#a77c47', '#ae8b61',
+                    '#ca4e11', '#ffd926', '#000000', '#ffffff', '#dfdfdf', '#b8afab', '#a58d8d',
+                    '#555555', '#710cc7', '#b261dc'];
 
-// create color palette
-const palette = document.getElementById('palette');
-colors.forEach(color => {
-  const swatch = document.createElement('div');
-  swatch.classList.add('color-swatch');
-  swatch.style.backgroundColor = color;
-  swatch.addEventListener('click', () => selectColor(color, swatch));
-  palette.appendChild(swatch);
-});
+    // Create color palette
+    const palette = document.getElementById('palette');
+    colors.forEach(color => {
+      const swatch = document.createElement('div');
+      swatch.classList.add('color-swatch');
+      swatch.style.backgroundColor = color;
+      swatch.addEventListener('click', () => selectColor(color, swatch));
+      palette.appendChild(swatch);
+    });
 
-// Select color
-function selectColor(color, swatch) {
-  currentColor = color;
-  
-  // Remove the “active” class from all colors
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  
-  // Add the “active” class to the selected color
-  if (swatch) {
-    swatch.classList.add('active');
-  }
-}
+    // Select color
+    function selectColor(color, swatch) {
+      currentColor = color;
+      isErasing = false; // Disable eraser if a color is selected
+      isEyedropperActive = false; // Disable eyedropper
+      canvas.style.cursor = 'crosshair';
 
-// load image on canvas
-const baseImage = new Image();
-baseImage.src = '/images/tdp1.png';  
-baseImage.onload = () => {
-  ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-  imageLoaded = true;
-};
+      // Remove the “active” class from all colors
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
 
-document.querySelector('.color-swatch').classList.add('active');
+      // Add the “active” class to the selected color
+      if (swatch) {
+        swatch.classList.add('active');
+      }
+    }
 
-let showGrid = false; // État initial pour afficher la grille
+    // Load image on canvas
+    const baseImage = new Image();
+    baseImage.src = '/images/tdp1.png';
+    baseImage.onload = () => {
+      ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+      imageLoaded = true;
+    };
 
-// Fonction pour dessiner la grille
-function drawGrid() {
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // Couleur de la grille
-  ctx.lineWidth = 0.5; // Épaisseur de la grille
+    document.querySelector('.color-swatch').classList.add('active');
 
-  for (let i = 0; i < canvas.width; i += pixelSize) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, canvas.height);
-    ctx.stroke();
-  }
+    let showGrid = false; // Grid initial state
 
-  for (let j = 0; j < canvas.height; j += pixelSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, j);
-    ctx.lineTo(canvas.width, j);
-    ctx.stroke();
-  }
-}
+    // Draw grind function
+    function drawGrid() {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 0.5; 
 
-// Fonction pour redessiner les pixels
-function redrawPixels() {
-  savedPixels.forEach(pixel => {
-    ctx.fillStyle = pixel.color;
-    ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
-  });
-}
+      for (let i = 0; i < canvas.width; i += pixelSize) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
 
-// Fonction pour redessiner le canvas avec ou sans la grille
-function redrawCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Efface le canvas pour un redraw propre
-  if (imageLoaded) {
-    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Recharge l'image
-  }
-  redrawPixels(); // Redessine les pixels
-  if (showGrid) {
-    drawGrid(); // Dessine la grille si activée
-  }
-}
+      for (let j = 0; j < canvas.height; j += pixelSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, j);
+        ctx.lineTo(canvas.width, j);
+        ctx.stroke();
+      }
+    }
 
-// Événement pour le bouton de la grille
-document.getElementById('toggleGrid').addEventListener('click', () => {
-  showGrid = !showGrid; // Inverse l'état de la grille
-  redrawCanvas(); // Redessine le canvas
-});
+    // Redraw pixels function
+    function redrawPixels() {
+      savedPixels.forEach(pixel => {
+        ctx.fillStyle = pixel.color;
+        ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+      });
+    }
 
-// draw a pixel function
-function drawPixel(x, y, color) {
-  const pixelX = Math.floor(x / pixelSize) * pixelSize;
-  const pixelY = Math.floor(y / pixelSize) * pixelSize;
-  ctx.fillStyle = color;
-  ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+    // redraw canvas with or without grid function
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      if (imageLoaded) {
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); 
+      }
+      redrawPixels(); 
+      if (showGrid) {
+        drawGrid(); 
+      }
+    }
 
-  // save the pixel
-  savedPixels.push({ x: pixelX, y: pixelY, color: color });
-}
+    // Grid button event
+    document.getElementById('toggleGrid').addEventListener('click', () => {
+      showGrid = !showGrid;
+      redrawCanvas(); 
+    });
 
-// begin drawing
-canvas.addEventListener('mousedown', (e) => {
-  drawing = true;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  drawPixel(x, y, currentColor);
-});
+    // Eraser : redraw base image
+    function erasePixel(x, y) {
+      const pixelX = Math.floor(x / pixelSize) * pixelSize;
+      const pixelY = Math.floor(y / pixelSize) * pixelSize;
+      if (imageLoaded) {
+        ctx.drawImage(baseImage, pixelX, pixelY, pixelSize, pixelSize, pixelX, pixelY, pixelSize, pixelSize);
+      }
+    }
 
-// draw by moving mouse
-canvas.addEventListener('mousemove', (e) => {
-  if (drawing) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    drawPixel(x, y, currentColor);
-  }
-});
+    // Activate eraser
+    document.getElementById('eraserTool').addEventListener('click', () => {
+      isErasing = true;
+      isEyedropperActive = false;
+      canvas.style.cursor = 'cell';
+    });
 
-// Stop drawing
-canvas.addEventListener('mouseup', () => {
-  drawing = false;
-});
+    // Activate eyedropper
+    document.getElementById('eyedropperTool').addEventListener('click', () => {
+      isEyedropperActive = true;
+      isErasing = false;
+      canvas.style.cursor = 'copy';
+    });
 
-// Clear Canvas
-document.getElementById('clearCanvas').addEventListener('click', () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (imageLoaded) {
-    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Load Image
-  }
-  savedPixels = [];
-});
+    // use eyedropper
+    function pickColor(x, y) {
+      const pixelData = ctx.getImageData(x, y, 1, 1).data;
+      const [r, g, b] = pixelData;
+      const hexColor = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+      currentColor = hexColor;
+      isEyedropperActive = false;
+      canvas.style.cursor = 'crosshair';
 
-// Save image
-document.getElementById('saveImage').addEventListener('click', () => {
-  
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = 1280;
-  tempCanvas.height = 800;
-  const tempCtx = tempCanvas.getContext('2d');
+      // Remove the “active” class from the other colors
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    }
 
-  tempCtx.drawImage(baseImage, 0, 0, 1280, 800);
+    // draw a pixel function
+    function drawPixel(x, y, color) {
+      const pixelX = Math.floor(x / pixelSize) * pixelSize;
+      const pixelY = Math.floor(y / pixelSize) * pixelSize;
+      ctx.fillStyle = color;
+      ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
 
-  savedPixels.forEach(pixel => {
-    tempCtx.fillStyle = pixel.color;
-    tempCtx.fillRect(pixel.x * (1280 / 640), pixel.y * (800 / 400), (20 * (1280 / 640)), (20 * (800 / 400)));
-  });
+      // save the pixel
+      savedPixels.push({ x: pixelX, y: pixelY, color: color });
+    }
 
-  const link = document.createElement('a');
-  link.download = 'dessin.png';
-  link.href = tempCanvas.toDataURL();
-  link.click();
-});
+    // begin drawing or erasing
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (isErasing) {
+        erasePixel(x, y);
+      } else if (iseEyedropperActive) {
+        pickColor(x, y);
+      } else {
+        drawPixel(x, y, currentColor);
+      }
+    });
+
+    // draw by moving mouse
+    canvas.addEventListener('mousemove', (e) => {
+      if (drawing) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (isErasing) {
+          erasePixel(x, y);
+        } else if (!isEyedropperActive) {
+          drawPixel(x, y, currentColor);
+        }
+      }
+    });
+
+    // Stop drawing
+    canvas.addEventListener('mouseup', () => {
+      drawing = false;
+    });
+
+    // Clear Canvas
+    document.getElementById('clearCanvas').addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (imageLoaded) {
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Load Image
+      }
+      savedPixels = [];
+    });
+
+    // Save image
+    document.getElementById('saveImage').addEventListener('click', () => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 1280;
+      tempCanvas.height = 800;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      tempCtx.drawImage(baseImage, 0, 0, 1280, 800);
+
+      savedPixels.forEach(pixel => {
+        tempCtx.fillStyle = pixel.color;
+        tempCtx.fillRect(pixel.x * (1280 / 640), pixel.y * (800 / 400), (20 * (1280 / 640)), (20 * (800 / 400)));
+      });
+
+      const link = document.createElement('a');
+      link.download = 'dessin.png';
+      link.href = tempCanvas.toDataURL();
+      link.click();
+    });
 
   </script>
 </body>
