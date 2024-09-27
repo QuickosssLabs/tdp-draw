@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,7 +65,7 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 5px;
+      margin-top: 20px;
       max-width: 600px;
     }
     .color-swatch {
@@ -144,6 +144,7 @@
     let imageLoaded = false;
     let isErasing = false;
     let isEyedropperActive = false;
+    let showGrid = false; // Initial state for grid visibility
 
     // List of predefined colors
     const colors = ['#9be0e0', '#75bdbd', '#328dfd', '#1a6ed5', '#5e7253','#7da269','#2c9541', '#711010', '#e22626',
@@ -151,7 +152,7 @@
                     '#ca4e11', '#ffd926', '#000000', '#ffffff', '#dfdfdf', '#b8afab', '#a58d8d',
                     '#555555', '#710cc7', '#b261dc'];
 
-    // Create color palette
+    // Create the color palette
     const palette = document.getElementById('palette');
     colors.forEach(color => {
       const swatch = document.createElement('div');
@@ -164,20 +165,20 @@
     // Select color
     function selectColor(color, swatch) {
       currentColor = color;
-      isErasing = false; // Disable eraser if a color is selected
+      isErasing = false; // Disable eraser when a color is selected
       isEyedropperActive = false; // Disable eyedropper
       canvas.style.cursor = 'crosshair';
 
-      // Remove the “active” class from all colors
+      // Remove "active" class from all color swatches
       document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
 
-      // Add the “active” class to the selected color
+      // Add "active" class to the selected color swatch
       if (swatch) {
         swatch.classList.add('active');
       }
     }
 
-    // Load image on canvas
+    // Load base image onto the canvas
     const baseImage = new Image();
     baseImage.src = '/images/tdp1.png';
     baseImage.onload = () => {
@@ -187,12 +188,10 @@
 
     document.querySelector('.color-swatch').classList.add('active');
 
-    let showGrid = false; // Grid initial state
-
-    // Draw grind function
+    // Function to draw the grid
     function drawGrid() {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.lineWidth = 0.5; 
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; // Grid color
+      ctx.lineWidth = 0.5; // Grid thickness
 
       for (let i = 0; i < canvas.width; i += pixelSize) {
         ctx.beginPath();
@@ -209,7 +208,7 @@
       }
     }
 
-    // Redraw pixels function
+    // Function to redraw the pixels
     function redrawPixels() {
       savedPixels.forEach(pixel => {
         ctx.fillStyle = pixel.color;
@@ -217,31 +216,32 @@
       });
     }
 
-    // redraw canvas with or without grid function
+    // Function to redraw the canvas, pixels, and grid
     function redrawCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
       if (imageLoaded) {
-        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); 
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Redraw the base image
       }
-      redrawPixels(); 
+      redrawPixels(); // Redraw the pixels
       if (showGrid) {
-        drawGrid(); 
+        drawGrid(); // Draw the grid only once at the end
       }
     }
 
-    // Grid button event
+    // Event for the grid toggle button
     document.getElementById('toggleGrid').addEventListener('click', () => {
-      showGrid = !showGrid;
-      redrawCanvas(); 
+      showGrid = !showGrid; // Toggle the grid state
+      redrawCanvas(); // Redraw the canvas
     });
 
-    // Eraser : redraw base image
+    // Eraser function: only remove added pixels, not the base image or grid
     function erasePixel(x, y) {
       const pixelX = Math.floor(x / pixelSize) * pixelSize;
       const pixelY = Math.floor(y / pixelSize) * pixelSize;
-      if (imageLoaded) {
-        ctx.drawImage(baseImage, pixelX, pixelY, pixelSize, pixelSize, pixelX, pixelY, pixelSize, pixelSize);
-      }
+
+      // Only erase pixels added by the user
+      savedPixels = savedPixels.filter(p => !(p.x === pixelX && p.y === pixelY));
+      redrawCanvas(); // Redraw the canvas, pixels, and grid
     }
 
     // Activate eraser
@@ -258,7 +258,7 @@
       canvas.style.cursor = 'copy';
     });
 
-    // use eyedropper
+    // Use the eyedropper to pick the color of a pixel
     function pickColor(x, y) {
       const pixelData = ctx.getImageData(x, y, 1, 1).data;
       const [r, g, b] = pixelData;
@@ -267,22 +267,24 @@
       isEyedropperActive = false;
       canvas.style.cursor = 'crosshair';
 
-      // Remove the “active” class from the other colors
+      // Remove "active" class from other colors
       document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
     }
 
-    // draw a pixel function
+    // Function to draw a pixel
     function drawPixel(x, y, color) {
       const pixelX = Math.floor(x / pixelSize) * pixelSize;
       const pixelY = Math.floor(y / pixelSize) * pixelSize;
       ctx.fillStyle = color;
       ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
 
-      // save the pixel
+      // Save the pixel
       savedPixels.push({ x: pixelX, y: pixelY, color: color });
+
+      redrawCanvas(); // Ensure the canvas is properly redrawn after drawing
     }
 
-    // begin drawing or erasing
+    // Start drawing or erasing
     canvas.addEventListener('mousedown', (e) => {
       drawing = true;
       const rect = canvas.getBoundingClientRect();
@@ -290,14 +292,14 @@
       const y = e.clientY - rect.top;
       if (isErasing) {
         erasePixel(x, y);
-      } else if (iseEyedropperActive) {
+      } else if (isEyedropperActive) {
         pickColor(x, y);
       } else {
         drawPixel(x, y, currentColor);
       }
     });
 
-    // draw by moving mouse
+    // Draw while moving the mouse
     canvas.addEventListener('mousemove', (e) => {
       if (drawing) {
         const rect = canvas.getBoundingClientRect();
@@ -316,16 +318,19 @@
       drawing = false;
     });
 
-    // Clear Canvas
+    // Clear the canvas
     document.getElementById('clearCanvas').addEventListener('click', () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (imageLoaded) {
-        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Load Image
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); // Reload the base image
       }
       savedPixels = [];
+      if (showGrid) {
+        drawGrid(); // Redraw the grid after clearing
+      }
     });
 
-    // Save image
+    // Save the image
     document.getElementById('saveImage').addEventListener('click', () => {
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = 1280;
@@ -340,7 +345,7 @@
       });
 
       const link = document.createElement('a');
-      link.download = 'dessin.png';
+      link.download = 'tdp-tag.png';
       link.href = tempCanvas.toDataURL();
       link.click();
     });
